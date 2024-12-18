@@ -17,7 +17,7 @@ A simple browser-based car racing game where players can control a car, avoid en
 ## How to Play
 1. Clone this repository:
    ```bash
-   git clone <repository_url>
+   git clone (https://github.com/Aydan-A/Car-Game.git)
    ```
 2. Open the `index.html` file in your browser.
 3. Click "Start" to begin the game.
