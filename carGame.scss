@@ -1,0 +1,85 @@
+$hidden-display:none;
+$position:absolute;
+
+html,
+body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hide {
+    display: $hidden-display;
+}
+
+.gameArea {
+    background-color: black;
+    width: 300px;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.scoreLabel {
+    background-color: aqua;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    color: white;
+    font-size: 2em;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+    position: absolute;
+}
+
+.car {
+    position: $position;
+    width: 50px;
+    height: 100px;
+    margin: auto;
+    background-size: cover;
+    background-position: center;
+    background-image: url(./Pics/car.webp);
+}
+
+.enemy {
+    width: 25px;
+    height: 40px;
+    margin: auto;
+    // background-image:url(Pics/truck.png);
+    animation: randomEnemy 10s infinite;
+    background-color: red;
+    position: absolute;
+}
+
+.line {
+    position: absolute;
+    background-color: white;
+    width: 5px;
+    height: 100px;
+    left: 50%;
+    animation: moveLine 1s linear infinite;
+}
+
+@keyframes moveLine {
+    0% {
+        top: 0;
+    }
+
+    100% {
+        top: 100%;
+    }
+}
+
+@keyframes randomEnemy {
+    0% {
+        transform: translateY(-150px);
+    }
+
+    100% {
+        transform: translateY(100vh);
+    }
+}
