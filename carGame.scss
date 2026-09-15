@@ -1,85 +1,364 @@
-$hidden-display:none;
-$position:absolute;
+$hidden-display: none;
+$position: absolute;
+$road-width: 300px;
+$score-height: 60px;
+$score-color: aqua;
+$car-yellow: #f2e600;
+$card-background: #1c1c1c;
+$tile-background: #262626;
+
+* {
+    box-sizing: border-box;
+}
 
 html,
 body {
-    height: 100vh;
+    // min-height, so a tall card (records on a short screen) can scroll instead of being cut off
+    min-height: 100vh;
+    min-height: 100dvh;
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: black;
+    color: white;
+    overscroll-behavior: none;
 }
 
 .hide {
-    display: $hidden-display;
+    display: $hidden-display !important;
+}
+
+.game {
+    position: relative;
+}
+
+// Start, game over and records cards. Everything scales with the screen.
+.welcomeScreen,
+.recordsScreen {
+    margin: 16px;
+    padding: clamp(24px, 4vw, 44px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 2.2vw, 22px);
+    // Never taller than the screen
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    background-color: $card-background;
+    border-radius: 16px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    line-height: 1.45;
+}
+
+.welcomeScreen {
+    width: min(720px, calc(100vw - 32px));
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    p {
+        margin: 0;
+    }
+}
+
+.title {
+    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+    font-weight: bold;
+    color: $car-yellow;
+}
+
+.hint {
+    max-width: 34em;
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    color: #cfcfcf;
+}
+
+.newBest {
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    font-weight: bold;
+    color: #7ee0a1;
+}
+
+.bestLine {
+    margin: 0;
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    font-weight: bold;
+    color: $score-color;
+}
+
+.help {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+.helpCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: clamp(12px, 1.6vw, 16px) 10px;
+    font-size: clamp(0.85rem, 1.3vw, 1rem);
+    color: #b5b5b5;
+    background-color: $tile-background;
+    border-radius: 10px;
+}
+
+.helpKeys {
+    font-size: 1.15em;
+    color: #f1f1f1;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.startButton,
+.recordsButton,
+.backButton {
+    min-height: 54px;
+    padding: 14px 26px;
+    font-family: inherit;
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    font-weight: bold;
+    border: 2px solid $score-color;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.startButton {
+    flex: 1 1 240px;
+    max-width: 420px;
+    color: #002b2b;
+    background-color: $score-color;
+}
+
+.recordsButton {
+    flex: 0 1 200px;
+}
+
+.recordsButton,
+.backButton {
+    color: $score-color;
+    background-color: transparent;
+}
+
+.backButton {
+    width: min(100%, 260px);
+}
+
+.recordsScreen {
+    width: min(900px, calc(100vw - 32px));
+}
+
+.recordsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    width: 100%;
+    // The lists scroll together, so the title and the Back button always stay in view
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.recordsCard {
+    padding: 14px;
+    background-color: $tile-background;
+    border-radius: 12px;
+    text-align: left;
+
+    h2 {
+        margin: 0 0 10px;
+        font-size: clamp(1rem, 1.5vw, 1.15rem);
+        color: $score-color;
+    }
+}
+
+.recordsList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        font-size: clamp(0.85rem, 1.3vw, 1rem);
+        background-color: #303030;
+        border-radius: 8px;
+    }
+
+    .seconds {
+        font-weight: bold;
+        color: $car-yellow;
+    }
+
+    .empty {
+        justify-content: center;
+        color: #9a9a9a;
+        background-color: transparent;
+    }
 }
 
 .gameArea {
     background-color: black;
-    width: 300px;
-    height: 100vh;
+    // The page is black too, so the road needs an edge.
+    // An outline is drawn outside the box, so the road keeps its full width.
+    outline: 2px solid #2b2b2b;
+    width: $road-width;
+    max-width: 100vw;
+    height: calc(100vh - #{$score-height});
+    height: calc(100dvh - #{$score-height});
+    margin-top: $score-height;
     overflow: hidden;
     position: relative;
+    touch-action: none;
+    user-select: none;
 }
 
 .scoreLabel {
-    background-color: aqua;
-    height: 60px;
-    line-height: 60px;
+    background-color: $score-color;
+    height: $score-height;
+    line-height: $score-height;
     text-align: center;
-    color: white;
+    color: #003333;
     font-size: 2em;
+    font-weight: bold;
     top: 0;
+    left: 0;
     width: 100%;
     z-index: 1;
-    position: absolute;
+    position: $position;
+}
+
+.pauseButton {
+    position: $position;
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    line-height: 1;
+    color: #003333;
+    background-color: rgba(0, 0, 0, 0.12);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+// Pics/car.webp is 356x200 with the car drawn in a 68x140 box, so crop the image to that box
+.car,
+.enemy {
+    position: $position;
+    width: 50px;
+    height: 103px;
+    background-image: url(./Pics/car.webp);
+    background-repeat: no-repeat;
+    background-size: calc(100% * 356 / 68) auto;
+    background-position: 47.92% 45%;
 }
 
 .car {
-    position: $position;
-    width: 50px;
-    height: 100px;
-    margin: auto;
-    background-size: cover;
-    background-position: center;
-    background-image: url(./Pics/car.webp);
+    z-index: 1;
 }
 
 .enemy {
-    width: 25px;
-    height: 40px;
-    margin: auto;
-    // background-image:url(Pics/truck.png);
-    animation: randomEnemy 10s infinite;
-    background-color: red;
-    position: absolute;
+    filter: hue-rotate(-70deg) saturate(2.5);
+
+    &.hit {
+        animation: blink 0.15s 4;
+    }
 }
 
 .line {
-    position: absolute;
+    position: $position;
     background-color: white;
     width: 5px;
     height: 100px;
     left: 50%;
-    animation: moveLine 1s linear infinite;
+    margin-left: -2.5px;
 }
 
-@keyframes moveLine {
-    0% {
-        top: 0;
+.pauseScreen {
+    position: $position;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+
+    p {
+        margin: 0;
     }
 
-    100% {
-        top: 100%;
+    .title {
+        color: $score-color;
     }
 }
 
-@keyframes randomEnemy {
-    0% {
-        transform: translateY(-150px);
+@keyframes blink {
+    50% {
+        opacity: 0.2;
+    }
+}
+
+@media (max-width: 560px) {
+    .recordsGrid {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 
-    100% {
-        transform: translateY(100vh);
+    .actions .startButton,
+    .actions .recordsButton {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+}
+
+// Short screens, such as a phone held sideways
+@media (max-height: 430px) {
+    .welcomeScreen,
+    .recordsScreen {
+        padding: 18px 16px;
+        gap: 10px;
+    }
+
+    .title {
+        font-size: 1.5em;
+    }
+
+    .recordsCard {
+        padding: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .enemy.hit {
+        animation: none;
     }
 }

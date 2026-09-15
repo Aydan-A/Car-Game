@@ -1,159 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="A playful top-down car game: dodge the traffic, level up as the road gets faster, and beat your saved records." />
-    <meta name="theme-color" content="#1d1d1d" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="A simple browser car racing game: avoid the red cars and see how long you can stay in the game.">
     <title>Car Game</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>" />
-    <link rel="preload" href="Pics/car.webp" as="image" />
-    <link rel="stylesheet" href="carGame.css" />
     <script src="carGame.js" defer></script>
-  </head>
-  <body>
-    <main class="container">
-      <header class="header">
-        <h1>
-          <button type="button" class="logo" aria-label="Car Game, back to dashboard">
-            <span class="logo-icon" aria-hidden="true">🏎️</span>
-            <span>Car Game</span>
-          </button>
-        </h1>
-      </header>
-
-      <!-- 1. Dashboard -->
-      <section class="screen dashboard-screen">
-        <p class="subtitle">Dodge the traffic and stay on the road as long as you can. The road gets faster every 15 seconds.</p>
-
-        <form class="setup-form">
-          <fieldset class="step">
-            <legend><span class="step-title"><span class="step-number">1</span>Pick a difficulty</span></legend>
-            <div class="level-tiles">
-              <label class="level-tile level-easy">
-                <input type="radio" name="difficulty" value="easy" />
-                <span class="tile-check" aria-hidden="true">✓</span>
-                <span class="tile-art" aria-hidden="true">🐢</span>
-                <span class="tile-name">Easy</span>
-                <span class="tile-tagline">Calm roads, gentle traffic</span>
-              </label>
-              <label class="level-tile level-normal">
-                <input type="radio" name="difficulty" value="normal" checked />
-                <span class="tile-check" aria-hidden="true">✓</span>
-                <span class="tile-art" aria-hidden="true">🚗</span>
-                <span class="tile-name">Normal</span>
-                <span class="tile-tagline">Busy city streets</span>
-              </label>
-              <label class="level-tile level-hard">
-                <input type="radio" name="difficulty" value="hard" />
-                <span class="tile-check" aria-hidden="true">✓</span>
-                <span class="tile-art" aria-hidden="true">🔥</span>
-                <span class="tile-name">Hard</span>
-                <span class="tile-tagline">Rush hour madness</span>
-              </label>
+    <link rel="stylesheet" href="carGame.css">
+</head>
+<body>
+    <div class="scoreLabel hide">
+        <span class="scoreText">Score: 0s</span>
+        <button type="button" class="pauseButton" aria-label="Pause">⏸</button>
+    </div>
+    <div class="game">
+        <div class="welcomeScreen">
+            <div class="message" aria-live="polite"></div>
+            <div class="help"></div>
+            <div class="actions">
+                <button type="button" class="startButton">Start Race</button>
+                <button type="button" class="recordsButton">🏆 Records</button>
             </div>
-          </fieldset>
-
-          <fieldset class="step">
-            <legend><span class="step-title"><span class="step-number">2</span>Driver name</span></legend>
-            <label class="visually-hidden" for="driver-name">Driver name</label>
-            <input id="driver-name" class="text-input" type="text" maxlength="16" autocomplete="off" placeholder="Player" />
-          </fieldset>
-
-          <div class="controls-help">
-            <div class="help-card help-keyboard">
-              <span class="help-keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></span>
-              <span>or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to steer</span>
+            <p class="bestLine"></p>
+        </div>
+        <div class="recordsScreen hide">
+            <p class="title">🏆 Records</p>
+            <div class="recordsGrid">
+                <div class="recordsCard">
+                    <h2>Top 10</h2>
+                    <ol class="recordsList topList"></ol>
+                </div>
+                <div class="recordsCard">
+                    <h2>Recent games</h2>
+                    <ol class="recordsList recentList"></ol>
+                </div>
             </div>
-            <div class="help-card help-keyboard">
-              <span class="help-keys"><kbd>P</kbd><kbd>Esc</kbd></span>
-              <span>to pause</span>
+            <button type="button" class="backButton">Back</button>
+        </div>
+        <div class="gameArea hide">
+            <div class="pauseScreen hide">
+                <p class="title">Paused</p>
+                <p class="hint">Press P / Esc or tap to continue</p>
             </div>
-            <div class="help-card help-touch">
-              <span class="help-keys" aria-hidden="true">👆</span>
-              <span>Drag on the road or hold ◀ ▶ to steer. Tap ⏸ to pause.</span>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button type="submit" class="btn btn-primary start-btn">Start Race</button>
-            <button type="button" class="btn btn-secondary records-btn">🏆 Records</button>
-          </div>
-          <p class="best-line" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <!-- 2. Game -->
-      <section class="screen game-screen" hidden>
-        <div class="hud">
-          <div class="hud-item"><span class="hud-label">Time</span><span class="hud-value hud-time">0.0s</span></div>
-          <div class="hud-item"><span class="hud-label">Level</span><span class="hud-value hud-level">1</span></div>
-          <div class="hud-item"><span class="hud-label">Dodged</span><span class="hud-value hud-dodged">0</span></div>
-          <div class="hud-item"><span class="hud-label">Best</span><span class="hud-value hud-best">–</span></div>
-          <button type="button" class="btn-icon pause-btn" aria-label="Pause">⏸</button>
         </div>
-
-        <div class="play-area">
-          <button type="button" class="touch-btn touch-left" data-dir="left" aria-label="Steer left">◀</button>
-          <div class="road-frame">
-            <div class="road">
-              <div class="lane-divider" aria-hidden="true"></div>
-              <div class="lane-divider" aria-hidden="true"></div>
-              <div class="car player-car" aria-hidden="true"></div>
-              <div class="countdown" aria-hidden="true"></div>
-              <div class="toast" aria-hidden="true"></div>
-              <div class="overlay pause-overlay" hidden>
-                <p class="overlay-title">Paused</p>
-                <button type="button" class="btn btn-primary resume-btn">Resume</button>
-                <button type="button" class="btn btn-secondary quit-btn">Dashboard</button>
-              </div>
-            </div>
-          </div>
-          <button type="button" class="touch-btn touch-right" data-dir="right" aria-label="Steer right">▶</button>
-        </div>
-        <p class="visually-hidden game-announcer" aria-live="polite"></p>
-      </section>
-
-      <!-- 3. Result -->
-      <section class="screen result-screen" hidden>
-        <h2 class="result-title" tabindex="-1">💥 Crash!</h2>
-        <p class="new-record" hidden>🏆 New record!</p>
-        <p class="result-summary"></p>
-        <div class="stats">
-          <div class="stat"><span class="stat-value result-time"></span><span class="stat-label">Time survived</span></div>
-          <div class="stat"><span class="stat-value result-dodged"></span><span class="stat-label">Cars dodged</span></div>
-          <div class="stat"><span class="stat-value result-level"></span><span class="stat-label">Level reached</span></div>
-          <div class="stat"><span class="stat-value result-best"></span><span class="stat-label">Best on <span class="result-difficulty"></span></span></div>
-        </div>
-        <div class="actions">
-          <button type="button" class="btn btn-primary again-btn">Race Again</button>
-          <button type="button" class="btn btn-secondary dashboard-btn">Dashboard</button>
-        </div>
-        <p class="ready-hint">Press <kbd>Enter</kbd> to race again</p>
-      </section>
-
-      <!-- 4. Records -->
-      <section class="screen records-screen" hidden>
-        <h2 class="records-title" tabindex="-1">🏆 Records</h2>
-        <div class="segmented" role="radiogroup" aria-label="Difficulty">
-          <label><input type="radio" name="records-difficulty" value="easy" /><span>🐢 Easy</span></label>
-          <label><input type="radio" name="records-difficulty" value="normal" checked /><span>🚗 Normal</span></label>
-          <label><input type="radio" name="records-difficulty" value="hard" /><span>🔥 Hard</span></label>
-        </div>
-        <div class="records-grid">
-          <div class="records-card">
-            <h3>Top 10</h3>
-            <ol class="records-list top-list"></ol>
-          </div>
-          <div class="records-card">
-            <h3>Recent races</h3>
-            <ol class="records-list recent-list"></ol>
-          </div>
-        </div>
-        <div class="actions">
-          <button type="button" class="btn btn-primary records-back-btn">Back to Dashboard</button>
-        </div>
-      </section>
-    </main>
-  </body>
+    </div>
+</body>
 </html>
