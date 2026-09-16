@@ -5,6 +5,10 @@ const startScreen = document.querySelector(".welcomeScreen");
 const message = document.querySelector(".message");
 const help = document.querySelector(".help");
 const bestLine = document.querySelector(".bestLine");
+const nameInput = document.querySelector(".nameInput");
+const previewTag = document.querySelector(".previewCar .nameTag");
+const difficultyInputs = document.querySelectorAll('input[name="difficulty"]');
+const filterButtons = document.querySelectorAll(".filterButton");
 const startButton = document.querySelector(".startButton");
 const recordsButton = document.querySelector(".recordsButton");
 const recordsScreen = document.querySelector(".recordsScreen");
@@ -15,28 +19,47 @@ const gameArea = document.querySelector(".gameArea");
 const pauseScreen = document.querySelector(".pauseScreen");
 
 const LEVEL_SECONDS = 10; // the red cars get faster every 10 seconds
-const START_ENEMY_SPEED = 4; // px per frame at 60 fps, same unit as player.speed
-const MAX_ENEMY_SPEED = 11;
-const START_ENEMY_DELAY = 1.4; // seconds between red cars
-const MIN_ENEMY_DELAY = 0.5;
+// Speeds are px per frame at 60 fps, delays are seconds between red cars
+const DIFFICULTIES = {
+  easy: { label: "Easy", carSpeed: 5, startSpeed: 3, maxSpeed: 8, speedStep: 0.5, startDelay: 1.7, minDelay: 0.8 },
+  normal: { label: "Normal", carSpeed: 5, startSpeed: 4, maxSpeed: 11, speedStep: 0.8, startDelay: 1.4, minDelay: 0.5 },
+  hard: { label: "Hard", carSpeed: 6, startSpeed: 5.5, maxSpeed: 13, speedStep: 1, startDelay: 1.1, minDelay: 0.4 },
+};
 const STEER_TIME = 0.45; // extra seconds between red cars so there is always time to steer around
 const LINE_GAP = 160;
 const CRASH_DELAY = 700;
 const RECORDS_KEY = "carGame.records";
+const SETTINGS_KEY = "carGame.settings";
+const DEFAULT_NAME = "Driver";
 const MAX_SAVED_GAMES = 100;
 
 startButton.addEventListener("click", start);
 recordsButton.addEventListener("click", showRecords);
 backButton.addEventListener("click", showWelcome);
+nameInput.addEventListener("input", () => {
+  settings.name = nameInput.value;
+  previewTag.textContent = driverName();
+  saveSettings();
+});
+difficultyInputs.forEach((input) =>
+  input.addEventListener("change", () => {
+    settings.difficulty = input.value;
+    updateBestLine();
+    saveSettings();
+  }),
+);
+filterButtons.forEach((button) => button.addEventListener("click", () => fillRecords(button.dataset.difficulty)));
 document.addEventListener("keydown", pressOn);
 document.addEventListener("keyup", pressOff);
+
+let settings = loadSettings();
 
 let player = {
   speed: 5,
   score: 0,
-  best: bestScore(),
+  best: 0,
   time: 0,
-  enemySpeed: START_ENEMY_SPEED,
+  enemySpeed: 0,
   nextEnemyIn: 0,
   lastFrame: 0,
   frameId: null,
@@ -54,7 +77,18 @@ let keys = {
 
 let touch = null; // finger position on the road while dragging
 
+nameInput.value = settings.name;
+previewTag.textContent = driverName();
+difficultyInputs.forEach((input) => (input.checked = input.value === settings.difficulty));
 showWelcome();
+
+function difficulty() {
+  return DIFFICULTIES[settings.difficulty];
+}
+
+function driverName() {
+  return settings.name.trim() || DEFAULT_NAME;
+}
 
 function isTouchScreen() {
   return window.matchMedia("(pointer: coarse)").matches;
@@ -93,7 +127,7 @@ function showWelcome() {
   startScreen.classList.remove("hide");
   showMessage([
     ["🏎️ Car Game", "title"],
-    ["Avoid the red cars and stay in the game as long as you can. They get faster every 10 seconds!", "hint"],
+    ["Pick your level, write your name on the car and avoid the red cars. They get faster every 10 seconds!", "hint"],
   ]);
   showHelp();
   startButton.textContent = "Start Race";
@@ -101,19 +135,25 @@ function showWelcome() {
 }
 
 function updateBestLine() {
-  player.best = bestScore();
-  bestLine.textContent = player.best > 0 ? `Best: ${player.best}s` : "No games yet. Set the first record!";
+  player.best = bestScore(settings.difficulty);
+  const label = difficulty().label;
+  bestLine.textContent = player.best > 0 ? `Best on ${label}: ${player.best}s` : `No ${label} games yet. Set the first record!`;
 }
 
 function showRecords() {
-  const records = loadRecords();
+  fillRecords(settings.difficulty);
+  startScreen.classList.add("hide");
+  recordsScreen.classList.remove("hide");
+  backButton.focus({ preventScroll: true });
+}
+
+function fillRecords(level) {
+  const records = loadRecords().filter((record) => record.difficulty === level);
   const top = [...records].sort((a, b) => b.score - a.score).slice(0, 10);
   const recent = [...records].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, 10);
   fillList(topList, top, true);
   fillList(recentList, recent, false);
-  startScreen.classList.add("hide");
-  recordsScreen.classList.remove("hide");
-  backButton.focus({ preventScroll: true });
+  filterButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.difficulty === level)));
 }
 
 function fillList(list, records, numbered) {
@@ -127,13 +167,19 @@ function fillList(list, records, numbered) {
   }
   records.forEach((record, index) => {
     const item = document.createElement("li");
+    const who = document.createElement("span");
+    who.className = "who";
+    const name = document.createElement("span");
+    name.className = "driver";
+    name.textContent = `${numbered ? `${index + 1}. ` : ""}${record.name}`;
     const when = document.createElement("span");
     when.className = "when";
-    when.textContent = `${numbered ? `${index + 1}. ` : ""}${formatDate(record.date)}`;
+    when.textContent = formatDate(record.date);
+    who.append(name, when);
     const seconds = document.createElement("span");
     seconds.className = "seconds";
     seconds.textContent = `${record.score}s`;
-    item.append(when, seconds);
+    item.append(who, seconds);
     list.appendChild(item);
   });
 }
@@ -159,7 +205,8 @@ function callEnemy(road) {
 
 function nextEnemyDelay(car) {
   const level = Math.floor(player.time / LEVEL_SECONDS);
-  const planned = Math.max(MIN_ENEMY_DELAY, START_ENEMY_DELAY - level * 0.1) * (0.8 + Math.random() * 0.4);
+  const { minDelay, startDelay } = difficulty();
+  const planned = Math.max(minDelay, startDelay - level * 0.1) * (0.8 + Math.random() * 0.4);
   // Two red cars never reach the player at the same time, so the road is never blocked.
   const pxPerSecond = player.enemySpeed * 60;
   const safe = (car.offsetHeight * 2) / pxPerSecond + STEER_TIME;
@@ -182,7 +229,9 @@ function start() {
   player.paused = false;
   player.score = 0;
   player.time = 0;
-  player.enemySpeed = START_ENEMY_SPEED;
+  player.speed = difficulty().carSpeed;
+  player.enemySpeed = difficulty().startSpeed;
+  player.best = bestScore(settings.difficulty);
   player.nextEnemyIn = 0.6;
   touch = null;
   releaseKeys();
@@ -201,6 +250,10 @@ function start() {
 
   let car = document.createElement("div");
   car.setAttribute("class", "car");
+  let nameTag = document.createElement("span");
+  nameTag.className = "nameTag";
+  nameTag.textContent = driverName();
+  car.appendChild(nameTag);
   gameArea.appendChild(car);
 
   player.x = (road.width - car.offsetWidth) / 2;
@@ -221,7 +274,7 @@ function playGame(timestamp) {
   const frames = seconds * 60;
   player.lastFrame = timestamp;
 
-  let car = document.querySelector(".car");
+  let car = gameArea.querySelector(".car");
   let road = gameArea.getBoundingClientRect();
 
   player.time += seconds;
@@ -230,7 +283,8 @@ function playGame(timestamp) {
     updateScore();
   }
   const level = Math.floor(player.time / LEVEL_SECONDS);
-  player.enemySpeed = Math.min(MAX_ENEMY_SPEED, START_ENEMY_SPEED + level * 0.8);
+  const { maxSpeed, startSpeed, speedStep } = difficulty();
+  player.enemySpeed = Math.min(maxSpeed, startSpeed + level * speedStep);
 
   moveCar(car, road, frames);
   moveLines(road, frames);
@@ -314,7 +368,7 @@ function gameOver(enemy) {
     showMessage(
       [
         ["💥 Game Over!", "title"],
-        [`${player.score} ${player.score === 1 ? "second" : "seconds"} you've been in the game.`, "hint"],
+        [`${driverName()}, ${player.score} ${player.score === 1 ? "second" : "seconds"} you've been in the game on ${difficulty().label}.`, "hint"],
         newBest ? ["New best score!", "newBest"] : null,
       ].filter(Boolean),
     );
@@ -322,7 +376,7 @@ function gameOver(enemy) {
     startButton.textContent = "Race Again";
     updateBestLine();
     document.querySelectorAll(".enemy").forEach((item) => item.remove());
-    document.querySelectorAll(".car").forEach((item) => item.remove());
+    gameArea.querySelectorAll(".car").forEach((item) => item.remove());
   }, CRASH_DELAY);
 }
 
@@ -438,14 +492,22 @@ function loadRecords() {
   try {
     const records = JSON.parse(localStorage.getItem(RECORDS_KEY) || "[]");
     if (!Array.isArray(records)) return [];
-    return records.filter((record) => record && Number.isFinite(record.score) && !Number.isNaN(Date.parse(record.date)));
+    return records
+      .filter((record) => record && Number.isFinite(record.score) && !Number.isNaN(Date.parse(record.date)))
+      .map((record) => ({
+        ...record,
+        // Games saved before names and levels were added count as Normal
+        name: typeof record.name === "string" && record.name.trim() ? record.name.trim() : DEFAULT_NAME,
+        difficulty: Object.hasOwn(DIFFICULTIES, record.difficulty) ? record.difficulty : "normal",
+      }));
   } catch {
     return [];
   }
 }
 
 function saveGame() {
-  const records = [...loadRecords(), { score: player.score, date: new Date().toISOString() }].slice(-MAX_SAVED_GAMES);
+  const game = { score: player.score, date: new Date().toISOString(), name: driverName(), difficulty: settings.difficulty };
+  const records = [...loadRecords(), game].slice(-MAX_SAVED_GAMES);
   try {
     localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
   } catch {
@@ -453,6 +515,28 @@ function saveGame() {
   }
 }
 
-function bestScore() {
-  return loadRecords().reduce((best, record) => Math.max(best, record.score), 0);
+function bestScore(level) {
+  return loadRecords()
+    .filter((record) => record.difficulty === level)
+    .reduce((best, record) => Math.max(best, record.score), 0);
+}
+
+function loadSettings() {
+  const saved = { name: "", difficulty: "normal" };
+  try {
+    const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    if (typeof stored.name === "string") saved.name = stored.name.slice(0, 10);
+    if (Object.hasOwn(DIFFICULTIES, stored.difficulty)) saved.difficulty = stored.difficulty;
+  } catch {
+    // Use the defaults
+  }
+  return saved;
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // Storage can be blocked; the choice just won't be remembered
+  }
 }

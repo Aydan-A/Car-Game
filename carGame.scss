@@ -89,9 +89,151 @@ body {
 
 .bestLine {
     margin: 0;
-    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    font-size: clamp(0.95rem, 1.5vw, 1.1rem);
     font-weight: bold;
     color: $score-color;
+}
+
+// Car preview on a small road next to the name and difficulty
+.garage {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(14px, 2.4vw, 24px);
+    width: 100%;
+    padding: clamp(14px, 2vw, 20px);
+    background-color: $tile-background;
+    border-radius: 12px;
+    text-align: left;
+}
+
+.previewRoad {
+    position: relative;
+    width: clamp(110px, 16vw, 140px);
+    min-height: 190px;
+    overflow: hidden;
+    background-color: black;
+    border-radius: 10px;
+    // Dashed center line, like the lines on the real road
+    background-image: linear-gradient(white 50%, transparent 50%);
+    background-size: 5px 60px;
+    background-repeat: repeat-y;
+    background-position: 50% 0;
+    animation: drive 0.6s linear infinite;
+}
+
+// .car.previewCar, so the size wins over the .car rule further down
+.car.previewCar {
+    top: 50%;
+    left: 50%;
+    width: 68px;
+    height: 140px;
+    font-size: 12px;
+    transform: translate(-50%, -50%);
+}
+
+.setup {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.fieldLabel {
+    padding: 0;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9a9a9a;
+}
+
+.nameInput {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    font-weight: bold;
+    color: white;
+    background-color: #303030;
+    border: 2px solid #3d3d3d;
+    border-radius: 10px;
+
+    &::placeholder {
+        font-weight: normal;
+        color: #8a8a8a;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: $car-yellow;
+    }
+}
+
+.levels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.level {
+    position: relative;
+    cursor: pointer;
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+.levelBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    height: 100%;
+    padding: 10px 6px;
+    text-align: center;
+    background-color: #303030;
+    border: 2px solid #3d3d3d;
+    border-radius: 10px;
+}
+
+.levelName {
+    font-size: clamp(0.95rem, 1.5vw, 1.05rem);
+    font-weight: bold;
+}
+
+.levelText {
+    font-size: 0.8rem;
+    color: #a8a8a8;
+}
+
+.level input:checked + .levelBox {
+    color: #002b2b;
+    background-color: $score-color;
+    border-color: $score-color;
+
+    .levelText {
+        color: #004444;
+    }
+}
+
+.level input:focus-visible + .levelBox {
+    outline: 2px solid $car-yellow;
+    outline-offset: 2px;
 }
 
 .help {
@@ -165,6 +307,32 @@ body {
     width: min(900px, calc(100vw - 32px));
 }
 
+.recordsFilter {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    background-color: $tile-background;
+    border-radius: 10px;
+}
+
+.filterButton {
+    min-height: 40px;
+    padding: 8px 18px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #cfcfcf;
+    background-color: transparent;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &[aria-pressed="true"] {
+        color: #002b2b;
+        background-color: $score-color;
+    }
+}
+
 .recordsGrid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -206,6 +374,24 @@ body {
         font-size: clamp(0.85rem, 1.3vw, 1rem);
         background-color: #303030;
         border-radius: 8px;
+    }
+
+    .who {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .driver {
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .when {
+        font-size: 0.85em;
+        color: #9a9a9a;
     }
 
     .seconds {
@@ -280,6 +466,25 @@ body {
 
 .car {
     z-index: 1;
+    font-size: 8px;
+}
+
+// The driver's name on the roof, written along the car
+.nameTag {
+    position: $position;
+    top: 50%;
+    left: 50%;
+    padding: 0.15em 0.5em;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: $car-yellow;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 0.3em;
+    transform: translate(-50%, -50%) rotate(-90deg);
 }
 
 .enemy {
@@ -321,6 +526,12 @@ body {
     }
 }
 
+@keyframes drive {
+    to {
+        background-position: 50% 60px;
+    }
+}
+
 @keyframes blink {
     50% {
         opacity: 0.2;
@@ -331,6 +542,51 @@ body {
     .recordsGrid {
         grid-template-columns: 1fr;
         gap: 10px;
+    }
+
+    .garage {
+        grid-template-columns: 1fr;
+    }
+
+    // Keep the whole start screen, Start button included, on a phone screen
+    .welcomeScreen {
+        padding: 20px 16px;
+        gap: 12px;
+    }
+
+    .garage {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .previewRoad {
+        width: 100%;
+        min-height: 110px;
+    }
+
+    .car.previewCar {
+        transform: translate(-50%, -50%) scale(0.72);
+    }
+
+    .setup {
+        gap: 12px;
+    }
+
+    .levelBox {
+        padding: 10px 4px;
+    }
+
+    .levelText {
+        display: none;
+    }
+
+    .help {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .helpCard {
+        padding: 8px;
     }
 
     .actions .startButton,
@@ -358,6 +614,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .previewRoad {
+        animation: none;
+    }
+
     .enemy.hit {
         animation: none;
     }

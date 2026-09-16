@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="A simple browser car racing game: avoid the red cars and see how long you can stay in the game.">
+    <meta name="description" content="A simple browser car racing game: pick a difficulty, put your name on the car and see how long you can avoid the red cars.">
     <title>Car Game</title>
-    <script src="carGame.js" defer></script>
-    <link rel="stylesheet" href="carGame.css">
+    <script src="carGame.js?v=4" defer></script>
+    <link rel="stylesheet" href="carGame.css?v=4">
 </head>
 <body>
     <div class="scoreLabel hide">
@@ -16,15 +16,57 @@
     <div class="game">
         <div class="welcomeScreen">
             <div class="message" aria-live="polite"></div>
+            <div class="garage">
+                <div class="previewRoad" aria-hidden="true">
+                    <div class="car previewCar"><span class="nameTag"></span></div>
+                </div>
+                <div class="setup">
+                    <label class="field">
+                        <span class="fieldLabel">Driver name</span>
+                        <input type="text" class="nameInput" maxlength="10" placeholder="Your name" autocomplete="nickname" spellcheck="false">
+                    </label>
+                    <fieldset class="field difficultyPicker">
+                        <legend class="fieldLabel">Difficulty</legend>
+                        <div class="levels">
+                            <label class="level">
+                                <input type="radio" name="difficulty" value="easy">
+                                <span class="levelBox">
+                                    <span class="levelName">Easy</span>
+                                    <span class="levelText">Slow traffic</span>
+                                </span>
+                            </label>
+                            <label class="level">
+                                <input type="radio" name="difficulty" value="normal">
+                                <span class="levelBox">
+                                    <span class="levelName">Normal</span>
+                                    <span class="levelText">Classic race</span>
+                                </span>
+                            </label>
+                            <label class="level">
+                                <input type="radio" name="difficulty" value="hard">
+                                <span class="levelBox">
+                                    <span class="levelName">Hard</span>
+                                    <span class="levelText">Fast and busy</span>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+                    <p class="bestLine"></p>
+                </div>
+            </div>
             <div class="help"></div>
             <div class="actions">
                 <button type="button" class="startButton">Start Race</button>
                 <button type="button" class="recordsButton">🏆 Records</button>
             </div>
-            <p class="bestLine"></p>
         </div>
         <div class="recordsScreen hide">
             <p class="title">🏆 Records</p>
+            <div class="recordsFilter" role="group" aria-label="Difficulty">
+                <button type="button" class="filterButton" data-difficulty="easy">Easy</button>
+                <button type="button" class="filterButton" data-difficulty="normal">Normal</button>
+                <button type="button" class="filterButton" data-difficulty="hard">Hard</button>
+            </div>
             <div class="recordsGrid">
                 <div class="recordsCard">
                     <h2>Top 10</h2>
